@@ -12,8 +12,6 @@ services:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.retention.time=30d
       - --web.enable-lifecycle
-    ports:
-      - "9090:9090"
     environment:
       TZ: ${TZ}
     networks:
@@ -29,8 +27,6 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
-    ports:
-      - "3000:3000"
     depends_on:
       - prometheus
       - loki
@@ -46,8 +42,6 @@ services:
     volumes:
       - ./loki-config.yml:/etc/loki/config.yml:ro
       - loki-data:/loki
-    ports:
-      - "3100:3100"
     environment:
       TZ: ${TZ}
     networks:
