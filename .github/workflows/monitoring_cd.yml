@@ -33,10 +33,10 @@ jobs:
       - name: Determine Image Tag
         id: tag
         run: |
-          EXISTING_TAGS=$(aws ecr list-images --repository-name ${{ secrets.ECR_REPO_NAME }} --region ${{ secrets.AWS_REGION }} --query 'imageIds[*].imageTag' --output text)
+          EXISTING_TAGS=$(aws ecr list-images --repository-name ${{ secrets.MON_ECR_REPO_NAME }} --region ${{ secrets.AWS_REGION }} --query 'imageIds[*].imageTag' --output text)
           VERSION_TAG="arm64-v8-v0.1"
           while echo "$EXISTING_TAGS" | grep -q "$VERSION_TAG"; do
-            VERSION_NUMBER=$(echo "$VERSION_TAG" | grep -o '[0-9]*$')
+            VERSION_NUMBER=$(echo "$VERSION_TAG" |  awk -F. '{print $NF}')
             NEXT_VERSION=$((VERSION_NUMBER + 1))
             VERSION_TAG="arm64-v8-v0.$NEXT_VERSION"
           done
