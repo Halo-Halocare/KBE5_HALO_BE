@@ -1,4 +1,5 @@
 version: "3.9"
+
 services:
   prometheus:
     image: prom/prometheus:v2.55.1
@@ -11,9 +12,12 @@ services:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.retention.time=30d
       - --web.enable-lifecycle
-    ports: ["9090:9090"]
-    environment: [ TZ=${TZ} ]
-    networks: [ observ ]
+    ports:
+      - "9090:9090"
+    environment:
+      TZ: ${TZ}
+    networks:
+      - observ
 
   grafana:
     image: grafana/grafana:11.2.2
@@ -25,58 +29,79 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
-    ports: ["3000:3000"]
-    depends_on: [ prometheus, loki, tempo ]
-    networks: [ observ ]
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    networks:
+      - observ
 
   loki:
     image: grafana/loki:2.9.6
     restart: unless-stopped
-    command: [ "-config.file=/etc/loki/config.yml" ]
+    command:
+      - "-config.file=/etc/loki/config.yml"
     volumes:
       - ./loki-config.yml:/etc/loki/config.yml:ro
       - loki-data:/loki
-    ports: ["3100:3100"]
-    environment: [ TZ=${TZ} ]
-    networks: [ observ ]
+    ports:
+      - "3100:3100"
+    environment:
+      TZ: ${TZ}
+    networks:
+      - observ
 
   tempo:
     image: grafana/tempo:2.6.1
     restart: unless-stopped
-    command: [ "-config.file=/etc/tempo/tempo.yaml" ]
+    command:
+      - "-config.file=/etc/tempo/tempo.yaml"
     volumes:
       - ./tempo.yaml:/etc/tempo/tempo.yaml:ro
       - tempo-data:/tmp/tempo
-    ports: ["3200:3200","4317:4317","4318:4318"]
-    environment: [ TZ=${TZ} ]
-    networks: [ observ ]
+    # 포트 노출은 오버라이드(dev/prod)에서 제어 (예: 3200, 4317/4318)
+    environment:
+      TZ: ${TZ}
+    networks:
+      - observ
 
   otel-collector:
     image: otel/opentelemetry-collector:0.105.0
     restart: unless-stopped
-    command: [ "--config=/etc/otel-collector.yaml" ]
+    command:
+      - "--config=/etc/otel-collector.yaml"
     volumes:
       - ./otel-collector.yaml:/etc/otel-collector.yaml:ro
-    ports: ["4317:4317","4318:4318"]
-    environment: [ TZ=${TZ} ]
-    depends_on: [ tempo ]
-    networks: [ observ ]
+    # 포트 노출은 오버라이드(dev/prod)에서 제어 (예: 4317, 4318)
+    environment:
+      TZ: ${TZ}
+    depends_on:
+      - tempo
+    networks:
+      - observ
 
   fluent-bit:
     image: grafana/fluent-bit-plugin-loki:2.9.6
     restart: unless-stopped
-    environment: [ TZ=${TZ} ]
+    environment:
+      TZ: ${TZ}
     volumes:
       - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
       - ./fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf:ro
-      - ./fluent-bit/set_service.lua:/fluent-bit/etc/set_service.lua:ro   # 🔸 Lua 스크립트
+      - ./fluent-bit/set_service.lua:/fluent-bit/etc/set_service.lua:ro
       - /var/log:/var/log:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    depends_on: [ loki ]
-    networks: [ observ ]
+    depends_on:
+      - loki
+    networks:
+      - observ
 
-networks: { observ: {} }
+networks:
+  observ: {}
+
 volumes:
   prom-data: {}
   grafana-data: {}
