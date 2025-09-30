@@ -5,7 +5,7 @@ on:
     branches: [ main, dev ]
     paths:
       - 'monitoring/**'
-      - '.github/workflows/monitoring-cd.yml'
+      - '.github/workflows/monitoring_cd.yml'
 
 jobs:
   BuildAndPushMonitoringBundle:
