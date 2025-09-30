@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  prometheus:
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./prometheus.dev.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    ports:
+      - "127.0.0.1:3000:3000"
+
+  loki:
+    ports:
+      - "127.0.0.1:3100:3100"
+
+  tempo:
+    ports:
+      - "127.0.0.1:3200:3200"
+      - "127.0.0.1:4317:4317"   # OTLP gRPC (앱이 localhost로 보냄)
+      - "127.0.0.1:4318:4318"   # OTLP HTTP
+
+  otel-collector:
+    ports:
+      - "127.0.0.1:4317:4317"   # 앱의 OTLP 엔드포인트 = http://localhost:4317
+      - "127.0.0.1:4318:4318"
+
+  fluent-bit:
+    environment:
+      # Fluent Bit 설정에서 env 라벨로 사용할 값(Labels env=${FLB_ENV})
+      - FLB_ENV=dev

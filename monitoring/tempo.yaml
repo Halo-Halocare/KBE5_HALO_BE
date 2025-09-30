@@ -1,0 +1,15 @@
+server: { http_listen_port: 3200, grpc_listen_port: 9095 }
+distributor:
+  receivers: { otlp: { protocols: { grpc: {}, http: {} } } }
+compactor: { compaction: { block_retention: 168h } } # 7일
+ingester:
+  lifecycler:
+    ring: { kvstore: { store: inmemory }, replication_factor: 1 }
+  trace_idle_period: 10s
+  max_block_bytes: 104857600
+  max_block_duration: 5m
+storage:
+  trace:
+    backend: local
+    local: { path: /tmp/tempo }
+    wal: { path: /tmp/tempo/wal }
