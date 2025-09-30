@@ -1,0 +1,5 @@
+env/*.env
+**/secrets*.json
+certs/*
+.git/
+**/.DS_Store

@@ -1,0 +1,41 @@
+name: Monitoring CD
+
+on:
+  push:
+    branches: [ main, dev ]
+    paths:
+      - 'monitoring/**'
+      - '.github/workflows/monitoring_cd.yml'
+
+jobs:
+  BuildAndPushMonitoringBundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set default.region ${{ secrets.AWS_REGION }}
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
+          | docker login --username AWS --password-stdin \
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      - name: Ensure monitoring repo exists
+        run: |
+          aws ecr describe-repositories --repository-names ${{ secrets.MON_ECR_REPO_NAME }} || \
+          aws ecr create-repository --repository-name ${{ secrets.MON_ECR_REPO_NAME }}
+
+      - name: Build & push monitoring bundle
+        run: |
+          docker buildx create --use
+          TAG=mon-${GITHUB_SHA::7}
+          docker buildx build --platform linux/arm64/v8 \
+            -f monitoring/Dockerfile monitoring \
+            -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.MON_ECR_REPO_NAME }}:$TAG \
+            --push
+          echo "MON_TAG=$TAG" >> $GITHUB_ENV

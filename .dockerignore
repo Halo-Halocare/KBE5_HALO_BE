@@ -1,0 +1,10 @@
+monitoring/
+.git/
+.gitignore
+.gradle/
+build/
+out/
+*.iml
+*.log
+**/.DS_Store
+node_modules/
