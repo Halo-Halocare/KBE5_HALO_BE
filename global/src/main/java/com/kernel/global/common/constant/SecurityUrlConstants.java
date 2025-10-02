@@ -18,7 +18,8 @@ public class SecurityUrlConstants  {
             "swagger-resources/**",
             "/api/common/serviceCategory",
             "/api/files/**",
-            "/api/reissue"
+            "/api/reissue",
+            "/actuator/**"
     };
 
     // 인증 필요 (로그인한 모든 사용자)
